@@ -4,6 +4,7 @@ import subprocess as sp
 import os
 
 
+
 def printil(*texts):
     " Prints inline, without \n "
     sys.stdout.write(' '.join([str(t) for t in texts]))
@@ -42,3 +43,44 @@ def execute(cmd):
     with open(os.devnull, 'w') as devnull:
         commandList = cmd.split() if type(cmd) == str else cmd
         return sp.check_output(commandList, stderr=devnull)
+
+
+def scatter(points, **opts):
+    """ Wrapper for plotting scatter diagrams
+
+    points: list of pairs
+    opts:
+        title: title of graph
+    """
+    import plotly.offline as py
+    from plotly.graph_objs import Scatter, Layout
+
+    # Values calculations
+    x, y = zip(*points)
+    xlength, ylength = max(x) - min(x), max(y) - min(y)
+    xmin, ymin = min(x) - xlength//10 if min(x) < 0 else 0, min(y) - ylength//10 if min(y) < 0 else 0
+    xRange, yRange = [(xmin, max(x)+xlength/10.0), (ymin, max(y)+ylength/10.0)]
+    print max(x), xlength, xlength/10.0
+
+    specs = {
+        'data': [
+            Scatter(
+                x = x,
+                y = y,
+                mode = 'markers')
+        ],
+        'layout': Layout(
+            xaxis = {
+                'range': xRange
+            },
+            yaxis = {
+                'range': yRange
+            },
+            title = opts['title'] if 'title' in opts else None
+        )
+    }
+
+    py.plot(specs)
+
+
+
