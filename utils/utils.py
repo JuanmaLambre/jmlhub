@@ -60,7 +60,6 @@ def scatter(points, **opts):
     xlength, ylength = max(x) - min(x), max(y) - min(y)
     xmin, ymin = min(x) - xlength//10 if min(x) < 0 else 0, min(y) - ylength//10 if min(y) < 0 else 0
     xRange, yRange = [(xmin, max(x)+xlength/10.0), (ymin, max(y)+ylength/10.0)]
-    print max(x), xlength, xlength/10.0
 
     specs = {
         'data': [
