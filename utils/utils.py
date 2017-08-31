@@ -4,6 +4,7 @@ import subprocess as sp
 import os
 
 
+
 def printil(*texts):
     """ Prints inline, without \\n 
     """
@@ -50,3 +51,52 @@ def execute(cmd):
     with open(os.devnull, 'w') as devnull:
         commandList = cmd.split() if type(cmd) == str else cmd
         return sp.check_output(commandList, stderr=devnull)
+
+
+def scatter(points, **opts):
+    """ Wrapper for plotting scatter diagrams.
+    The idea of this wrapper is to make it very easy and direct to use
+    for simple scattering (just call scatter(points) and we will do the rest),
+    but flexible for minor adjustments
+
+    points: list of pairs
+    opts:
+        spec: spec to replace default
+        title: title of graph
+    """
+    import plotly.offline as py
+
+    # Values calculations
+    x, y = zip(*points)
+    xlength, ylength = max(x) - min(x), max(y) - min(y)
+    xmin, ymin = min(x) - xlength//10 if min(x) < 0 else 0, min(y) - ylength//10 if min(y) < 0 else 0
+    xRange, yRange = [(xmin, max(x)+xlength/10.0), (ymin, max(y)+ylength/10.0)]
+
+    specs = opts['spec'] if 'spec' in opts else {
+        'data': [
+            # Scatter object
+            {
+                'x': x,
+                'y': y,
+                'mode': 'markers',
+                'marker': {
+                    'size': 2
+                }
+            }
+        ],
+        'layout': {
+            # Layout object
+            'xaxis': {
+                'range': xRange
+            },
+            'yaxis': {
+                'range': yRange
+            },
+            'title': opts['title'] if 'title' in opts else None
+        }
+    }
+
+    py.plot(specs)
+
+
+
