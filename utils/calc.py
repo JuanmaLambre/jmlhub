@@ -2,6 +2,7 @@
 
 """ Usage: calc <equation>
 If no args received it will read stdin until no input is found
+Can use 'ans' variable as last result
 """
 
 import sys
