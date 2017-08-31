@@ -27,7 +27,7 @@ def _revolution(point, delta, axis=DEFAULT_AXIS):
 
 def revolve(outline, delta, **opts):
     """ Makes a revolution solid out of 'outline'.
-    Returns an ordered list of points that form the solid
+    Returns an ordered list of outlines, each one rotated 'delta' degrees
 
     outline: list of points
     delta: precision angle for discrete revolution
@@ -103,7 +103,7 @@ def outline(f, end, **opts):
     delta = float(opts['delta']) if 'delta' in opts else (end-init)/50
     points = []
     x = init
-    while x < end:
+    while x <= end:
         points.append([x, f(x), 0])
         x += delta
     return points
