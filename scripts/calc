@@ -11,7 +11,9 @@ import sys
 CONSTANT_KEYWORDS = {
     "KB": 1024.0,
     "MB": 1024.0**2,
-    "GB": 1024.0**3
+    "GB": 1024.0**3,
+    'M': 1000000.0,
+    'K': 1000.0
 }
 
 def replace_constants(equation):
