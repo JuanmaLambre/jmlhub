@@ -29,6 +29,7 @@ def showProgress(current, everything):
 
 def histogram(data, step, **kwargs):
     """ Prints an histogram.
+
     data: list of floats
     step: interval size
     kwargs:
