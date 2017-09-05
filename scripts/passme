@@ -1,0 +1,110 @@
+#!/usr/bin/python
+
+from sys import argv
+import sys
+from os import environ as env
+import os
+from getpass import getpass
+from simplecrypt import encrypt, decrypt
+import simplecrypt
+
+PASSME_ROOT = env['PASSME_ROOT']
+
+
+def getCiphers():
+    ciphersDir = PASSME_ROOT + 'ciphers/'
+    c = os.listdir(ciphersDir)
+    c.remove(".DS_Store")
+    return c
+
+def getDeciphered(cipherName, masterKey):
+    with open(PASSME_ROOT + 'ciphers/' + cipherName, 'r') as cipherFile:
+        cipherText = cipherFile.read()
+        return decrypt(masterKey, cipherText)
+
+def putCipher(cipherName, cipherPass, masterKey):
+    cipherText = encrypt(masterKey, cipherPass)
+    with open(PASSME_ROOT + 'ciphers/' + cipherName, 'w') as cipherFile:
+        cipherFile.write(cipherText)
+
+def showCiphers():
+    ciphers = getCiphers()
+    ciphers.sort()
+    print '\n'.join(ciphers)
+    return 0
+
+def cipher(cipherName):
+    cipherPass = getpass('Password to be ciphered: ')
+    masterKey = getpass('Master password: ')
+    while masterKey != getpass('Confirm master password: '):
+        pass
+    putCipher(cipherName, cipherPass, masterKey)
+    print "Done"
+    return 0
+
+def decipher(cipherName):
+    masterKey = getpass('Master password: ')
+    print getDeciphered(cipherName, masterKey)
+    return 0
+
+def changeMaster():
+    passes = []
+    oldMasterKey = getpass('Old master password: ')
+    newMasterKey = getpass('New master password: ')
+    while newMasterKey != getpass('Confirm new:'):
+        pass
+    
+    ciphers = getCiphers()
+    for cipher in ciphers:
+        secretPass = getDeciphered(cipher, oldMasterKey)
+        putCipher(cipher, secretPass, newMasterKey)
+        print "{} done ({} of {})".format(cipher, ciphers.index(cipher)+1, len(ciphers))
+    return 0
+
+def showHelp():
+    print "USAGE: passme <option> [CIPHER_NAME]"
+    print "Options:"
+    print "\t-h, --help\t\t\tPrint this"
+    print "\t-l, --list\t\t\tShow current ciphers"
+    print "\t-c, --cipher CIPHER_NAME\tCrypt with given name"
+    print "\t-d, --decipher CIPHER_NAME\tDecrypt given cipher"
+    print "\t-m, --change-master\t\tChange master pass (all should be the same!)"
+    print
+    return 0
+
+
+def main():
+    if len(argv) < 2:
+        print "USAGE: passme <option> [CIPHER_NAME]"
+        return 1
+
+    # One argument options
+    option = argv[1]
+    if option in ['-l', '--list']:
+        return showCiphers()
+    elif option in ['-h', '--help']:
+        return showHelp()
+    elif option in ['-m', '--change-master']:
+        return changeMaster()
+
+    if len(argv) < 3:
+        print "Missing cipher name"
+        return 2
+    cipherName = argv[2]
+
+    # Two arguments options
+    if option in ['-c', '--cipher']:
+        return cipher(cipherName)
+    elif option in ['-d', '--decipher']:
+        if cipherName not in getCiphers():
+            print "Wrong cipher name"
+            return 4
+        else:
+            return decipher(cipherName)
+    else:
+        print "{}: wrong option".format(option)
+        return 3
+        
+
+if __name__ == '__main__':
+    exit(main())
