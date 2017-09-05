@@ -63,6 +63,7 @@ def scatter(points, **opts):
     opts:
         spec: spec to replace default
         title: title of graph
+        size: size of markes
     """
     import plotly.offline as py
 
@@ -80,7 +81,7 @@ def scatter(points, **opts):
                 'y': y,
                 'mode': 'markers',
                 'marker': {
-                    'size': 2
+                    'size': opts['size'] if 'size' in opts else 4
                 }
             }
         ],
