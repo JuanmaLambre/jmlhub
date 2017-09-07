@@ -5,13 +5,20 @@ function test_me() {
 /**
  * Some terminology:
  *      point: list of size=3 representing (x, y, z)
- *      outline: list of points
+ *      outline: list of points representing a line
+ *      mesh: list of points representing a 2D figure
  *      surface: list of outlines
  */
 
 
 var DEFAULT_AXIS = 1    // x=0, y=1, z=2
 
+/**
+ * Returns the dot product of matrix A·B
+ * 
+ * @param {*} A left matrix
+ * @param {*} B right matrix
+ */
 function dot(A, B) {
     var res = [];
     var n = A[0].length;
@@ -29,6 +36,14 @@ function dot(A, B) {
     return res;
 }
 
+/**
+ * Python-like range function
+ * 
+ * @return Array [x, y)
+ * 
+ * @param {*} x start (inclusive)
+ * @param {*} y end (exclusive)
+ */
 function range(x, y) {
     var ret = [];
     for (var i = x; i < y; i++) {
@@ -47,23 +62,24 @@ function _rotate(point, angle, axis=DEFAULT_AXIS) {
 
 /**
  * Makes a revolution surface out of outline.
- * 
+ *
  * @return a surface, with each outline rotated 'delta' degrees
- * 
- * @param {*} outline 
+ *
+ * @param {*} outline
  * @param {*} delta precision angle for discrete resolution
- * @param {*} opts 
+ * @param {*} opts
        axis: rotation axis (defaults DEFAULTS_AXIS)
        angle: length (in angle) of revolution. Defaults 2*PI (minus epsilon)
  */
 function revolve(outline, delta, opts={}) {
-    var axis = opts.axis || DEFAULT_AXIS
+    var { axis } = opts
+    if (axis == null) axis = DEFAULT_AXIS
     var maxAngle = opts.angle || 2*Math.PI - 0.000001
 
     var res = [outline];
     theta = delta;
     while (theta <= maxAngle) {
-        res.push(outline.map(function(p) { return _rotate(p, theta, axis) }))
+        res.push(outline.map((p) => { return _rotate(p, theta, axis) }))
         theta += delta
     }
     return res
@@ -71,9 +87,41 @@ function revolve(outline, delta, opts={}) {
 
 
 /**
+ * Makes a grid with points spaced by 1, on plane z=0
+ *
+ * @return a grid surface
+ *
+ * @param rows amount of vertical points
+ * @param cols amount of horizontal points
+ */
+function grid(rows, cols) {
+    var res = []
+    for (var y = rows - 1; y >= 0; y--) {
+        for (var x = 0; x < cols; x++) {
+            res.push([x-(cols-1)/2.0, y-(rows-1)/2.0, 0])
+        }
+    }
+    return res
+}
+
+
+/**
+ * Flattens a grid for WebGL
+ *
+ * @param grid
+ */
+function flattenGrid(grid) {
+   var flat = []
+   for (var point = 0; point < grid.length; point++) {
+       flat = flat.concat(grid[point])
+   }
+   return flat
+}
+
+/**
  * Flattens a surface for WebGL
- * 
- * @param {*} surface of outlines
+ *
+ * @param {*} surface
  */
 function flattenSurface(surface) {
     var flat = []
@@ -86,10 +134,16 @@ function flattenSurface(surface) {
 }
 
 
-/** Creates an index buffer for a mesh with rows*cols points
+/** 
+ * Creates an index buffer for a mesh with rows*cols points
+ * 
+ * @param rows amount of points in row
+ * @param cols amount of points in columns
+ * @param opts
+        close: whether the last row intertwines with the first one
  */
-function meshIndex(rows, cols) {
-    function intertwine(a1, a2) {
+function meshIndex(rows, cols, opts={}) {
+    var intertwine = function(a1, a2) {
         var ret = [];
         for (var i = 0; i < a1.length; i++) {
             ret.push(a1[i]);
@@ -98,16 +152,26 @@ function meshIndex(rows, cols) {
         return ret;
     }
 
-    buffer = [];
+    var close = opts.close
+    var buffer = [];
     var toprow, bottomrow = range(0, cols).reverse();
 
-    for (var row = 1; row < rows; row++) {
+    var row = 1;
+    for (; row < rows; row++) {
         toprow = bottomrow.reverse();
         bottomrow = range(row*cols, (row+1)*cols);
-        if (row % 2 == 0) 
+        if (row % 2 == 0)
             bottomrow = bottomrow.reverse();
         buffer = buffer.concat(intertwine(toprow, bottomrow));
     }
+
+    if (close) {
+        toprow = bottomrow.reverse()
+        bottomrow = range(0, cols)
+        if (row % 2 == 0) bottomrow = bottomrow.reverse();
+        buffer = buffer.concat(intertwine(toprow, bottomrow));
+    }
+
     return buffer
 }
 
