@@ -1,8 +1,9 @@
-function test_me() {
-    return "HI";
-}
-
-/**
+/** 
+ * ------------------------            >>>>>>>>>>>>>>>>>>>>>>>>
+ * ------------------------ Revolution >>>>>>>>>>>>>>>>>>>>>>>>
+ * ------------------------    lib     >>>>>>>>>>>>>>>>>>>>>>>>
+ * ------------------------            >>>>>>>>>>>>>>>>>>>>>>>>
+ * 
  * Some terminology:
  *      point: list of size=3 representing (x, y, z)
  *      outline: list of points representing a line
@@ -11,14 +12,11 @@ function test_me() {
  */
 
 
-var DEFAULT_AXIS = 1    // x=0, y=1, z=2
+(function(revolution) {
 
-/**
- * Returns the dot product of matrix A·B
- * 
- * @param {*} A left matrix
- * @param {*} B right matrix
- */
+var DEFAULT_AXIS = 1 // x=0, y=1, z=2
+
+
 function dot(A, B) {
     var res = [];
     var n = A[0].length;
@@ -36,27 +34,19 @@ function dot(A, B) {
     return res;
 }
 
-/**
- * Python-like range function
- * 
- * @return Array [x, y)
- * 
- * @param {*} x start (inclusive)
- * @param {*} y end (exclusive)
- */
+function rotate(point, angle, axis=DEFAULT_AXIS) {
+    var R = [[axis == 0 ? 1 : Math.cos(angle), axis == 2 ? -Math.sin(angle) : 0, axis == 1 ? Math.sin(angle) : 0],
+             [axis == 2 ? Math.sin(angle) : 0, axis == 1 ? 1 : Math.cos(angle), axis == 0 ? -Math.sin(angle) : 0],
+             [axis == 1 ? -Math.sin(angle) : 0, axis == 0 ? Math.sin(angle) : 0, axis == 2 ? 1 : Math.cos(angle)]]
+    return dot([point], R)[0]
+}
+
 function range(x, y) {
     var ret = [];
     for (var i = x; i < y; i++) {
         ret.push(i);
     }
     return ret;
-}
-
-function _rotate(point, angle, axis=DEFAULT_AXIS) {
-    var R = [[axis == 0 ? 1 : Math.cos(angle), axis == 2 ? -Math.sin(angle) : 0, axis == 1 ? Math.sin(angle) : 0],
-             [axis == 2 ? Math.sin(angle) : 0, axis == 1 ? 1 : Math.cos(angle), axis == 0 ? -Math.sin(angle) : 0],
-             [axis == 1 ? -Math.sin(angle) : 0, axis == 0 ? Math.sin(angle) : 0, axis == 2 ? 1 : Math.cos(angle)]]
-    return dot([point], R)[0]
 }
 
 
@@ -71,7 +61,7 @@ function _rotate(point, angle, axis=DEFAULT_AXIS) {
        axis: rotation axis (defaults DEFAULTS_AXIS)
        angle: length (in angle) of revolution. Defaults 2*PI (minus epsilon)
  */
-function revolve(outline, delta, opts={}) {
+revolution.revolve = function (outline, delta, opts={}) {
     var { axis } = opts
     if (axis == null) axis = DEFAULT_AXIS
     var maxAngle = opts.angle || 2*Math.PI - 0.000001
@@ -79,7 +69,7 @@ function revolve(outline, delta, opts={}) {
     var res = [outline];
     theta = delta;
     while (theta <= maxAngle) {
-        res.push(outline.map((p) => { return _rotate(p, theta, axis) }))
+        res.push(outline.map((p) => { return rotate(p, theta, axis) }))
         theta += delta
     }
     return res
@@ -94,7 +84,7 @@ function revolve(outline, delta, opts={}) {
  * @param rows amount of vertical points
  * @param cols amount of horizontal points
  */
-function grid(rows, cols) {
+revolution.grid = function (rows, cols) {
     var res = []
     for (var y = rows - 1; y >= 0; y--) {
         for (var x = 0; x < cols; x++) {
@@ -110,7 +100,7 @@ function grid(rows, cols) {
  *
  * @param grid
  */
-function flattenGrid(grid) {
+revolution.flattenGrid = function (grid) {
    var flat = []
    for (var point = 0; point < grid.length; point++) {
        flat = flat.concat(grid[point])
@@ -123,7 +113,7 @@ function flattenGrid(grid) {
  *
  * @param {*} surface
  */
-function flattenSurface(surface) {
+revolution.flattenSurface = function (surface) {
     var flat = []
     for (var outline = 0; outline < surface.length; outline++) {
         for (var point = 0; point < surface[outline].length; point++) {
@@ -142,7 +132,7 @@ function flattenSurface(surface) {
  * @param opts
         close: whether the last row intertwines with the first one
  */
-function meshIndex(rows, cols, opts={}) {
+revolution.meshIndex = function (rows, cols, opts={}) {
     var intertwine = function(a1, a2) {
         var ret = [];
         for (var i = 0; i < a1.length; i++) {
@@ -185,7 +175,7 @@ function meshIndex(rows, cols, opts={}) {
         delta: space between evaluations. Defaults (end-init)/50
         init: starting value. Defaults 0
 */
-function outline(f, end, opts={}) {
+revolution.outline = function (f, end, opts={}) {
     var init = opts.init || 0.0,
         delta = opts.delta || (end-init)/50.0,
         points = [],
@@ -196,3 +186,5 @@ function outline(f, end, opts={}) {
     }
     return points
 }
+
+}(window.revolution = window.revolution || {}))
