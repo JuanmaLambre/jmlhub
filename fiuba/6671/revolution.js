@@ -172,19 +172,37 @@ revolution.meshIndex = function (rows, cols, opts={}) {
  * @param f function to outline
  * @param end last value
  * @param opts
-        delta: space between evaluations. Defaults (end-init)/50
+        delta: steps for x. Can be function of step number. Defaults to (end-init)/50
         init: starting value. Defaults 0
 */
 revolution.outline = function (f, end, opts={}) {
-    var init = opts.init || 0.0,
-        delta = opts.delta || (end-init)/50.0,
-        points = [],
-        x = init;
-    while (x <= end) {
+    var { init = 0.0, 
+         delta = (end-init)/50.0 } = opts;
+    var x = init, 
+        points = [];
+    for (var i = 1; x <= end; i++) {
         points.push([x, f(x), 0])
-        x += delta
+        x += typeof(delta) === "function" ? delta(i) : delta
     }
     return points
+}
+
+
+/**
+ * Returns an outline of a semicircle at plane z = 0, y > 0
+ * 
+ * @param {int} radius
+ * @param opts
+        discretion: integer
+ */
+revolution.semicircle = function (radius=1, opts={}) {
+    var { discretion = 32 } = opts
+    var sc = []
+    for (var i = 0; i <= discretion; i++) {
+        var angle = i*Math.PI/discretion;
+        sc.push([radius*Math.cos(angle), radius*Math.sin(angle), 0])
+    }
+    return sc
 }
 
 }(window.revolution = window.revolution || {}))
