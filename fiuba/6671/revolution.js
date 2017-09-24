@@ -13,9 +13,31 @@
 
 
 (function(revolution) {
-
+    
 var DEFAULT_AXIS = 1 // x=0, y=1, z=2
+var EPSILON =Math.pow(10,-10)
 
+
+function transpose(mat) {
+    return mat[0].map((col, i) => {
+        return mat.map((row) => {
+            return row[i];
+        })
+    })
+}
+
+function cross_prod(u, v) {
+    return [u[1]*v[2]-u[2]*v[1], u[2]*v[0]-u[0]*v[2], u[0]*v[1]-u[1]*v[0]]
+}
+
+function dot_prod(u, v) {
+    return u.map((x,i) => {return x * v[i]}).reduce((x,y) => {return x + y});
+}
+
+function normalize(v) {
+    var length = Math.sqrt(v.reduce((x, y) => {return x + y**2}, 0));
+    return v.map((x) => {return x/length});
+}
 
 function dot(A, B) {
     var res = [];
@@ -34,10 +56,30 @@ function dot(A, B) {
     return res;
 }
 
+function minus(a, b) {
+    if (typeof(a) === "number") {
+        if (typeof(b) === "number") {
+            return a - b;
+        } else {
+            throw "Not a number: " + b;
+        }
+    } else {
+        return a.map((x,i) => {return minus(x, b[i])});
+    }
+}
+
+function sum(a, b) {
+    if (typeof(a) === "number") {
+        return a + b;
+    } else {
+        return a.map((x,i) => {return sum(x, b[i])});
+    }
+}
+
 function rotate(point, angle, axis=DEFAULT_AXIS) {
     var R = [[axis == 0 ? 1 : Math.cos(angle), axis == 2 ? -Math.sin(angle) : 0, axis == 1 ? Math.sin(angle) : 0],
-             [axis == 2 ? Math.sin(angle) : 0, axis == 1 ? 1 : Math.cos(angle), axis == 0 ? -Math.sin(angle) : 0],
-             [axis == 1 ? -Math.sin(angle) : 0, axis == 0 ? Math.sin(angle) : 0, axis == 2 ? 1 : Math.cos(angle)]]
+                [axis == 2 ? Math.sin(angle) : 0, axis == 1 ? 1 : Math.cos(angle), axis == 0 ? -Math.sin(angle) : 0],
+                [axis == 1 ? -Math.sin(angle) : 0, axis == 0 ? Math.sin(angle) : 0, axis == 2 ? 1 : Math.cos(angle)]]
     return dot([point], R)[0]
 }
 
@@ -49,6 +91,21 @@ function range(x, y) {
     return ret;
 }
 
+/*
+https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d
+where K = [v]x
+*/
+function reflectionMat(a, b) {
+    a = normalize(a);
+    b = normalize(b);
+    var cos_ab = dot_prod(a, b);
+    var v = cross_prod(a, b);
+    var K = [[0,-v[2],v[1]], [v[2],0,-v[0]], [-v[1],v[0],0]];
+    var K2cos_ab = dot(K,K).map((row) => {return row.map((x) => {return x/(1+cos_ab)})})
+    var Id = [[1,0,0],[0,1,0],[0,0,1]];
+    return sum(sum(Id,K), K2cos_ab);
+}
+
 
 /**
  * Makes a revolution surface out of outline.
@@ -58,13 +115,13 @@ function range(x, y) {
  * @param {*} outline
  * @param {*} delta precision angle for discrete resolution
  * @param {*} opts
-       axis: rotation axis (defaults DEFAULTS_AXIS)
-       angle: length (in angle) of revolution. Defaults 2*PI (minus epsilon)
- */
+         axis: rotation axis (defaults DEFAULTS_AXIS)
+        angle: length (in angle) of revolution. Defaults 2*PI (minus MIN_VALUE)
+    */
 revolution.revolve = function (outline, delta, opts={}) {
     var { axis } = opts
     if (axis == null) axis = DEFAULT_AXIS
-    var maxAngle = opts.angle || 2*Math.PI - 0.000001
+    var maxAngle = opts.angle || 2*Math.PI - Number.MIN_VALUE
 
     var res = [outline];
     theta = delta;
@@ -101,11 +158,11 @@ revolution.grid = function (rows, cols) {
  * @param grid
  */
 revolution.flattenGrid = function (grid) {
-   var flat = []
-   for (var point = 0; point < grid.length; point++) {
-       flat = flat.concat(grid[point])
-   }
-   return flat
+    var flat = []
+    for (var point = 0; point < grid.length; point++) {
+        flat = flat.concat(grid[point])
+    }
+    return flat
 }
 
 /**
@@ -131,7 +188,7 @@ revolution.flattenSurface = function (surface) {
  * @param cols amount of points in columns
  * @param opts
         close: whether the last row intertwines with the first one
- */
+*/
 revolution.meshIndex = function (rows, cols, opts={}) {
     var intertwine = function(a1, a2) {
         var ret = [];
@@ -142,7 +199,7 @@ revolution.meshIndex = function (rows, cols, opts={}) {
         return ret;
     }
 
-    var close = opts.close
+    var { close = false } = opts
     var buffer = [];
     var toprow, bottomrow = range(0, cols).reverse();
 
@@ -165,7 +222,6 @@ revolution.meshIndex = function (rows, cols, opts={}) {
     return buffer
 }
 
-
 /**
  * Outlines the given function 'f'
  *
@@ -177,7 +233,7 @@ revolution.meshIndex = function (rows, cols, opts={}) {
 */
 revolution.outline = function (f, end, opts={}) {
     var { init = 0.0, 
-         delta = (end-init)/50.0 } = opts;
+            delta = (end-init)/50.0 } = opts;
     var x = init, 
         points = [];
     for (var i = 1; x <= end; i++) {
@@ -194,7 +250,7 @@ revolution.outline = function (f, end, opts={}) {
  * @param {int} radius
  * @param opts
         discretion: integer
- */
+    */
 revolution.semicircle = function (radius=1, opts={}) {
     var { discretion = 32 } = opts
     var sc = []
@@ -205,4 +261,39 @@ revolution.semicircle = function (radius=1, opts={}) {
     return sc
 }
 
+/**
+ * Given a 2D outline with normal (0,0,1) and a straight path return a 
+ * sweep solid over said path.
+ * 
+ * @return a surface
+ * 
+ * @param outline 2D outline with normal (0,0,1)
+ * @param init point where path begins
+ * @param end point where path ends
+ * @param opts
+        steps: number of steps. Defaults to 50
+        scale: function receiving a number between 0 and 1, returns a 3D vector
+        twist: function receiving a number between 0 and 1, and returns twist angle
+ */
+revolution.sweep = (outline, init, end, opts={}) => {
+    var { steps = 50,
+        scale = (i) => {return [1,1,1]},
+        twist = (i) => {return 0}
+    } = opts;
+    var R = reflectionMat([0,0,1], minus(end, init));
+    return transpose(range(0,steps+1).map( (i) => {
+        var stepIndex = 1.0*i/steps;
+        var newCenter = sum(init, minus(end, init).map((x)=>{return x*stepIndex}));
+        return outline.map( (point) => {
+            var scaled = point.map((x,p) => {return x*scale(stepIndex)[p]})
+            var angle = twist(stepIndex)
+            var T = [[Math.cos(angle), -Math.sin(angle)], [Math.sin(angle), Math.cos(angle)]]
+            var twisted = transpose(dot(T, transpose([scaled])))[0]
+            var rotated = transpose(dot(R, transpose([twisted.concat(0)])))[0]
+            return sum(newCenter, rotated)
+        })
+    }))
+}
+
 }(window.revolution = window.revolution || {}))
+    
