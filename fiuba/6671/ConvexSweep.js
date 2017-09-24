@@ -37,7 +37,6 @@ Revolution.ConvexSweep = class {
                     i++
                 }
             }
-            //this.index.push(last - 1)
             this.index.push(last)
             this.index = [last-1,0,steps+1].concat(this.index)
         }
