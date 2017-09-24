@@ -26,6 +26,8 @@ function transpose(mat) {
     })
 }
 
+revolution.transpose = transpose;
+
 function cross_prod(u, v) {
     return [u[1]*v[2]-u[2]*v[1], u[2]*v[0]-u[0]*v[2], u[0]*v[1]-u[1]*v[0]]
 }
@@ -281,7 +283,7 @@ revolution.sweep = (outline, init, end, opts={}) => {
         twist = (i) => {return 0}
     } = opts;
     var R = reflectionMat([0,0,1], minus(end, init));
-    return transpose(range(0,steps+1).map( (i) => {
+    return range(0,steps+1).map( (i) => {
         var stepIndex = 1.0*i/steps;
         var newCenter = sum(init, minus(end, init).map((x)=>{return x*stepIndex}));
         return outline.map( (point) => {
@@ -292,7 +294,7 @@ revolution.sweep = (outline, init, end, opts={}) => {
             var rotated = transpose(dot(R, transpose([twisted.concat(0)])))[0]
             return sum(newCenter, rotated)
         })
-    }))
+    })
 }
 
 }(window.revolution = window.revolution || {}))
