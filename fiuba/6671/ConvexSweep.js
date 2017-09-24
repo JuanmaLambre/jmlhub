@@ -25,11 +25,13 @@ Revolution.ConvexSweep = class {
         this.index = revolution.meshIndex(outline.length, steps+1, {close: true})
 
         if (cover) {
+            // Add the middle point of the cover to the position buffer
             this.position = this.position.
                     concat(average(sweep[0])).
                     concat(average(sweep[sweep.length-1]));
             var last = this.position.length/3 - 1
             
+            // Add the middle points of the cover to the index buffer
             for (var i = 0; i < this.index.length; i++) {
                 if (this.index[i] == this.index[i-1]) {
                     if (this.index[i] % 2 == 1) this.index.splice(i, 0, last)
@@ -37,7 +39,7 @@ Revolution.ConvexSweep = class {
                     i++
                 }
             }
-            this.index.push(last)
+            this.index.push(last - 1*(outline.length % 2 == 0))
             this.index = [last-1,0,steps+1].concat(this.index)
         }
 
