@@ -1,6 +1,6 @@
-(function(Figures) {
+(function(Revolution) {
     
-Figures.Sphere = class {
+Revolution.Sphere = class {
 
     constructor(opts={}) {
         var { discretion = 32,
@@ -16,4 +16,4 @@ Figures.Sphere = class {
 
 }
     
-}(window.Figures = window.Figures || {}))
+}(window.Revolution = window.Revolution || {}))

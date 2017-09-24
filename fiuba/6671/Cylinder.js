@@ -1,6 +1,6 @@
-(function(Figures) {
+(function(Revolution) {
 
-Figures.Cylinder = class {
+Revolution.Cylinder = class {
 
     constructor(opts={}) {
         var { discretion = 32 } = opts
@@ -23,4 +23,4 @@ Figures.Cylinder = class {
 
 }
 
-}(window.Figures = window.Figures || {}))
+}(window.Revolution = window.Revolution || {}))
