@@ -65,6 +65,7 @@ def scatter(points, **opts):
         spec: spec to replace default
         title: title of graph
         size: size of markes
+        filename: filename to be saved
     """
     import plotly.offline as py
 
@@ -98,7 +99,8 @@ def scatter(points, **opts):
         }
     }
 
-    py.plot(specs)
+    filename = opts['filename'] if 'filename' in opts else 'scatter'
+    py.plot(specs, filename=filename)
 
 
 
