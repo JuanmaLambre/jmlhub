@@ -5,8 +5,9 @@ import sys
 from os import environ as env
 import os
 from getpass import getpass
-from simplecrypt import encrypt, decrypt
-import simplecrypt
+# https://stackoverflow.com/questions/27335726/how-do-i-encrypt-and-decrypt-a-string-in-python
+# from simplecrypt import encrypt, decrypt <-- Malicious
+# import simplecrypt <-- Malicious 
 
 PASSME_ROOT = env['PASSME_ROOT']
 
