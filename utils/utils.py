@@ -36,8 +36,8 @@ def histogram(data, step, **kwargs):
         start: When does the chart begins. Default = 0
         multiplicity: How much each character represents. Default = 1 
     """
-    start = kwargs['start'] if 'start' in kwargs else 0
-    multiplicity = kwargs['multiplicity'] if 'multiplicity' in kwargs else 1
+    start = kwargs.get('start', 0)
+    multiplicity = kwargs.get('multiplicity', 1)
 
     counter = Counter(x // step for x in data)
     distros = [counter[n] for n in range(int(max(data)/step+1))]
@@ -75,7 +75,7 @@ def scatter(points, **opts):
     xmin, ymin = min(x) - xlength//10 if min(x) < 0 else 0, min(y) - ylength//10 if min(y) < 0 else 0
     xRange, yRange = [(xmin, max(x)+xlength/10.0), (ymin, max(y)+ylength/10.0)]
 
-    specs = opts['spec'] if 'spec' in opts else {
+    specs = opts.get('spec', {
         'data': [
             # Scatter object
             {
@@ -83,7 +83,7 @@ def scatter(points, **opts):
                 'y': y,
                 'mode': 'markers',
                 'marker': {
-                    'size': opts['size'] if 'size' in opts else 4
+                    'size': opts.get('size', 4)
                 }
             }
         ],
@@ -95,11 +95,11 @@ def scatter(points, **opts):
             'yaxis': {
                 'range': yRange
             },
-            'title': opts['title'] if 'title' in opts else None
+            'title': opts.get('title', None)
         }
-    }
+    })
 
-    filename = opts['filename'] if 'filename' in opts else 'scatter.html'
+    filename = opts.get('filename', 'scatter.html')
     py.plot(specs, filename=filename)
 
 
