@@ -99,7 +99,7 @@ def scatter(points, **opts):
         }
     }
 
-    filename = opts['filename'] if 'filename' in opts else 'scatter'
+    filename = opts['filename'] if 'filename' in opts else 'scatter.html'
     py.plot(specs, filename=filename)
 
 
