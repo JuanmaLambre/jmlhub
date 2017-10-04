@@ -2,8 +2,8 @@ from collections import Counter
 
 
 def loadCSV(csvpath, **opts):
-    limit = opts['limit'] if 'limit' in opts else float('infinity')
-    condition = opts['condition'] if 'condition' in opts else lambda r: True
+    limit = opts.get('limit', float('infinity'))
+    condition = opts.get('condition', lambda r: True)
 
     content = open(csvpath, 'r').read().splitlines()
     header = content[0].split(',')
